@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<body>
+<div align="center" style="width: 100% ">
+    <form action="/add" method="POST" id="addForm">
+        <h1>新增预定</h1>
+        <div id="checkRet"></div>
+        <table align="center" style="width: 80%; height: 400px">
+            <tr>
+                <td align="right" width="30%">房间:</td>
+                <td align="center">一号<input type="radio" name="room" value="一号"> &nbsp; 二号 <input type="radio" name="room" value="二号">&nbsp; 三号 <input type="radio" name="room" value="三号"></td>
+            </tr>
+            <tr>
+                <td align="right">开始: </td>
+                <td align="center"><input class="Wdate" type="text" value="<%= now %>" onClick="WdatePicker({el:this,dateFmt:'yyyy-M-d H:m'})" name="beginTime" id="beginTime" onchange="addDate();" readonly="readonly"></td>
+            </tr>
+            <tr>
+                <td align="right">时长:</td>
+                <td align="center"><select id="time" style="width: 169px;" onchange="addDate();">
+                        <option value="0">请选择</option>
+                        <option value="5">5分</option>
+                        <option value="10">10分</option>
+                        <option value="15">15分</option>
+                        <option value="30">30分</option>
+                        <option value="60">60分</option>
+                    </select></td>
+            </tr>
+            <input type="hidden" name="endTime" id="endTime">
+            <tr>
+                <td align="right">备注: </td>
+                <td align="center"><input type="text" name="date" id="date" maxlength="20"> </td>
+            </tr>
+            <tr align="center">
+                <td colspan="2"><input type="button" onclick="isfull();" value="提交"></td>
+            </tr>
+        </table>
+    </form>
+</div>
+<script src="/javascripts/jquery-3.3.1.js"></script>
+<script src="/javascripts/My97DatePicker/WdatePicker.js"></script>
+<script>
+    function addDate(){
+        var beginTime = $("#beginTime").val();
+        var time = $("#time").val();
+        var date=new Date(beginTime);
+        date.setMinutes(date.getMinutes()+parseInt(time));
+        var endTime = date.getFullYear()+'-'+(date.getMonth()+1)+'-'+date.getDate()+" "+date.getHours()+":"+date.getMinutes();
+        //时间冲突校验
+        $.ajax({
+            data: {beginTime:beginTime,endTime:endTime},
+            url: '/checkTime',
+            type:"post",
+            dataType: 'JSON',
+            success: function(data){
+                if(data.flag==true){
+                    $("#checkRet").html('<img src="/images/wrong.png" width="15px">&nbsp;&nbsp;时间:'+beginTime+'到'+endTime+'已被使用');
+                    $("#endTime").val("");
+                }else{
+                    $("#checkRet").html('<img src="/images/right.png" width="15px">&nbsp;&nbsp;时间:'+beginTime+'到'+endTime+'可以使用');
+                    $("#endTime").val(endTime);
+                }
+            },
+            error: function(){
+                alert("验证失败");
+            }
+        });
+    }
+    //校验
+    function isfull() {
+        if($('input:radio[name="room"]:checked').val()==null){
+            alert("请选择房间号");
+            return;
+        }
+        if($("#beginTime").val()==""){
+            alert("请选择起始时间");
+            return;
+        }
+        if($("#time").val()==""){
+            alert("请选择时长");
+            return;
+        }
+        if($("#endTime").val()==""){
+            alert("此时间已被占用");
+            return;
+        }
+        $("#addForm").submit();
+    }
+</script>
+</body>
+</html>
